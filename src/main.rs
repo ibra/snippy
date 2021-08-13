@@ -1,26 +1,21 @@
-use hyper::{Client, Uri};
+use futures::executor::block_on;
 use structopt::StructOpt;
 
-/// Search for a pattern in a file and display the lines that contain it.
 #[derive(StructOpt)]
 struct Cli {
-    r#type: String,
+    request_type: String,
     link: String,
 }
 
 fn main() {
     let args = Cli::from_args();
+    if args.request_type == "get" {
+        let link_info = get_link_info(&args.link);
+        block_on(link_info);
+    }
 }
 
-async fn get_link_info() {
-    let client = Client::new();
-
-    let url: Uri = "http://httpbin.org/response-headers?foo=bar"
-        .parse()
-        .unwrap();
-
-    match client.get(url).await {
-        Ok(res) => println!("Response: {}", res.status()),
-        Err(err) => println!("Error: {}", err),
-    }
+#[tokio::main]
+async fn get_link_info(link_id: &String) {
+    println!("Link id is {} ", link_id);
 }
