@@ -4,7 +4,9 @@ use structopt::StructOpt;
 
 #[derive(StructOpt)]
 struct Cli {
+    /// The type of the request [get, shorten]
     request_type: String,
+    /// The link to be shortened, or the shortened link to be expanded
     link: String,
 }
 
@@ -41,7 +43,7 @@ fn main() {
             Err(err) => println!("{:?}", err),
         }
     } else if args.request_type == "shorten" {
-        match shorten_link(&String::from("https://youtube.com")) {
+        match shorten_link(&String::from(args.link)) {
             Ok(_info) => (),
             Err(err) => println!("{:?}", err),
         }
@@ -93,7 +95,7 @@ async fn shorten_link(value: &String) -> Result<(), Box<dyn std::error::Error>> 
     println!(
         "{}",
         format!(
-            "Created link with url {url}.\nLink redirects to: {short_url}\nCreated At {created}",
+            "Created link with url {url}.\nLink redirects to: {short_url}.\nCreated At {created}.",
             url = json.short_url,
             short_url = json.value,
             created = json.creation_time
