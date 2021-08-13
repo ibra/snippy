@@ -1,7 +1,5 @@
-use reqwest::Error;
 use serde::Deserialize;
 use serde::Serialize;
-use std::collections::HashMap;
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -11,34 +9,43 @@ struct Cli {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 struct Link {
     id: String,
-    shortUrl: String,
+    short_url: String,
     value: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct PersonResponse {
-    data: String,
-    method: String,
-    headers: HashMap<String, String>,
+#[serde(rename_all = "camelCase")]
+struct LinkPost {
+    expiration_time: u64,
+    value: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct LinkResponse {
+    id: String,
+    creation_time: u64,
+    expiration_time: u64,
+    value: String,
+    short_url: String,
 }
 
 fn main() {
     let args = Cli::from_args();
     if args.request_type == "get" {
         match get_link_info(&args.link) {
-            Ok(info) => println!("{:?}", info),
+            Ok(_info) => (),
+            Err(err) => println!("{:?}", err),
+        }
+    } else if args.request_type == "shorten" {
+        match shorten_link(&String::from("https://youtube.com")) {
+            Ok(_info) => (),
             Err(err) => println!("{:?}", err),
         }
     }
-    //check if request type is post or shorten
-    // else if args.request_type == "shorten" {
-    //     match shorten_link(&args.link) {
-    //         Ok(short_link) => println!("{:?}", short_link),
-    //         Err(err) => println!("{:?}", err),
-    //     }
-    // }}
 }
 
 #[tokio::main]
@@ -55,25 +62,42 @@ async fn get_link_info(link_id: &String) -> Result<(), Box<dyn std::error::Error
         .send()
         .await?;
 
-    // Parse the response body as Json in this case
+    // Parse the response body as JSON and display cleanly.
     let response = res.json::<Link>().await?;
     println!(
         "{}",
         format!(
-            "Found link with id {id}.\nLink URL: {short_url}\nRedirects to: {value}",
+            "Found link with id {id}.\nLink URL: {short_url}.\nRedirects to: {value}.",
             id = response.id,
-            short_url = response.shortUrl,
+            short_url = response.short_url,
             value = response.value
         )
     );
     Ok(())
 }
 
-// #[tokio::main]
-// async fn shorten_link(link_id: &String) -> Result<(), Box<dyn std::error::Error>> {
-//     // Build the client using the builder pattern
-//     let client = reqwest::Client::builder().build()?;
-//     // Perform the actual execution of the network request
-//     // let res = client
-//     //     .post(format!(""
-// }
+#[tokio::main]
+async fn shorten_link(value: &String) -> Result<(), Box<dyn std::error::Error>> {
+    let link = LinkPost {
+        expiration_time: 1629464589,
+        value: value.to_string(),
+    };
+
+    let response = reqwest::Client::new()
+        .post("https://beta.sniplink.net/api/v1/link")
+        .json(&link)
+        .send()
+        .await?;
+
+    let json = response.json::<LinkResponse>().await?;
+    println!(
+        "{}",
+        format!(
+            "Created link with url {url}.\nLink redirects to: {short_url}\nCreated At {created}",
+            url = json.short_url,
+            short_url = json.value,
+            created = json.creation_time
+        )
+    );
+    Ok(())
+}
