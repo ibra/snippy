@@ -6,7 +6,7 @@ a simple command line tool for [sniplink](https://beta.sniplink.net/).
 snippy get [sniplink url id]
 ```
 ```console
-snippy shorten [url]
+snippy shorten [url] --nocopy --duration=30
 ```
 
 ## disclaimer
