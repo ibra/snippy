@@ -10,7 +10,7 @@ snippy shorten [url] --nocopy --duration=30
 ```
 
 ## disclaimer
-this project was made as simply as a short foray into rust, i will likely not continue development on it.
+this project was made simply as a short foray into rust, i will likely not continue development on it.
 
 ## installation
 you can either **build from source**, or download the binary from the [releases page](https://github.com/ibra/snippy/releases). 
